@@ -1,23 +1,6 @@
 'use client';
-
-import { Card, Container, Row, Col, Spinner, Alert } from 'react-bootstrap';
 import { useEffect, useState } from 'react';
-
-function UserCard({ user }) {
-  return (
-    <Card className="mb-4 shadow-sm">
-      <Card.Body>
-        <Card.Title>{user.name}</Card.Title>
-        <Card.Subtitle className="mb-2 text-muted">{user.username}</Card.Subtitle>
-        <Card.Text>
-          <strong>Email:</strong> {user.email}<br/>
-          <strong>Phone:</strong> {user.phone}<br/>
-          <strong>Website:</strong> {user.website}
-        </Card.Text>
-      </Card.Body>
-    </Card>
-  );
-}
+import { Card, Container, Row, Col, Spinner, Alert, Image } from 'react-bootstrap';
 
 export default function UsersPage() {
   const [users, setUsers] = useState([]);
@@ -25,29 +8,60 @@ export default function UsersPage() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch('https://jsonplaceholder.typicode.com/users')
-      .then(res => {
-        if (!res.ok) throw new Error('Failed to fetch');
-        return res.json();
-      })
-      .then(data => setUsers(data))
-      .catch(err => setError(err.message))
-      .finally(() => setLoading(false));
+    async function fetchUsers() {
+      try {
+        const res = await fetch('/api/users');
+        if (!res.ok) throw new Error('Failed to fetch users');
+        const data = await res.json();
+        setUsers(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchUsers();
   }, []);
 
-  if (loading) return <div className="text-center py-5"><Spinner animation="border" /></div>;
-  if (error) return <Alert variant="danger" className="p-4 text-center">Error: {error}</Alert>;
-
   return (
-    <Container className="py-5">
-      <h2 className="mb-4 text-center">Users</h2>
-      <Row>
-        {users.map(user => (
-          <Col md={4} key={user.id}>
-            <UserCard user={user} />
-          </Col>
-        ))}
-      </Row>
+    <Container>
+      <h2 className="mb-4">All Users</h2>
+      
+      {loading ? (
+        <div className="text-center">
+          <Spinner animation="border" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </Spinner>
+        </div>
+      ) : error ? (
+        <Alert variant="danger">{error}</Alert>
+      ) : users.length === 0 ? (
+        <Alert variant="info">No users found</Alert>
+      ) : (
+        <Row xs={1} md={2} lg={3} className="g-4">
+          {users.map(user => (
+            <Col key={user._id}>
+              <Card className="h-100 shadow-sm">
+                <Card.Body className="text-center">
+                  <Image 
+                    src={user.image} 
+                    alt={user.name} 
+                    roundedCircle 
+                    width={100} 
+                    height={100} 
+                    className="mb-3 object-fit-cover"
+                  />
+                  <Card.Title>{user.name}</Card.Title>
+                  <Card.Text className="text-muted">
+                    {user.email}
+                  </Card.Text>
+                </Card.Body>
+              </Card>
+            </Col>
+          ))}
+        </Row>
+      )}
     </Container>
   );
 }

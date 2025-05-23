@@ -1,3 +1,8 @@
+export const metadata = {
+  title: 'About Us - MyApp',
+  description: 'This is the about page.',
+};
+
 export default function About() {
   return (
     <div className="container py-5">
